@@ -2,9 +2,9 @@
 
 class Model {
 	
-	public function get_data() {
-		// todo
-	}
+  public function get_data() {
+    // todo
+  }
 }
 
 ?>
