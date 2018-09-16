@@ -4,11 +4,11 @@ class Controller_Check_Free_Domains extends Controller {
 
   // Строку превращаем в массив, предварительно переведя в нижний регистр
   // Слова состоят из лат.букв, цифр и дефисов, остальное трактуем как разделители
-  // Убираем дубликаты, на пропуск ключей не заморачиваемся
+  // Убираем дубликаты, ограничиваем длину 50 словами
   private function words_to_array($s = "") {
     $matches = array();
     preg_match_all('!([a-z0-9-]+)!', strtolower($s), $matches);
-    return array_unique($matches[0]);
+    return array_slice(array_unique($matches[0]), 0, 50);
   }
 
   function __construct() {
