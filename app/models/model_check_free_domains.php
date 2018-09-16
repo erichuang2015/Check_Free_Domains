@@ -5,6 +5,7 @@ class Model_Check_Free_Domains extends Model {
   private $list1;
   private $list2;
   private $defis;
+  private $method;
   private $names;
 
   private function prepare_names() {
@@ -25,30 +26,48 @@ class Model_Check_Free_Domains extends Model {
     sort($this->names);
   }
 
-  function __construct($l1, $l2, $d) {
+  function __construct($l1, $l2, $d, $m) {
     $this->defis = $d;
     $this->list1 = $l1;
     $this->list2 = $l2;
+    $this->method = $m;
     $this->prepare_names();
+  }
+  
+  private function is_available_by_whois($name) {
+    $server = 'whois.internic.net';
+    if ($conn = fsockopen ($server, 43)) {
+      fputs($conn, $name."\r\n");
+      $output = fgets($conn,128)[0];
+      fclose($conn);
+    } else
+      die('Ошибка: Не могу подключиться к '.$server.'!');  // не для реальной работы
+    return $output == 'N';		// От "No matches"
+  }
+  
+  /* работает очень долго
+  private function is_available_by_whois2($name) {
+    $api = 'http://api.whois.vu/?q='.$name.'&clean';
+    $json = file_get_contents($api);
+    $obj = json_decode($json);
+    return $obj->available == 'yes';
+  }
+  */
+    
+  private function is_available_by_dns($name) {
+    return gethostbyname($name) == $name;
   }
 
   public function get_data() {	
     $freenames = array();
-    $server = 'whois.internic.net';
-    foreach ($this->names as $name) {
-      if ($conn = fsockopen ($server, 43)) {
-        fputs($conn, $name."\r\n");
-        $output = fgets($conn,128)[0];
-        fclose($conn);
-      } else
-        die('Ошибка: Не могу подключиться к '.$server.'!');  // не для реальной работы
-      if ($output == 'N')		// От "No matches"
+    foreach ($this->names as $name)
+      if ($this->{'is_available_by_'.$this->method}($name))
         $freenames[] = $name;
-    }		
     return array(			
       'list1' => $this->list1,
       'list2' => $this->list2,
       'defis' => $this->defis,
+      'method' => $this->method,
       'names_counter' => count($this->names),
       'freenames' => $freenames);
   }

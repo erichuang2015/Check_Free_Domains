@@ -15,7 +15,8 @@ class Controller_Check_Free_Domains extends Controller {
     $this->model = new Model_Check_Free_Domains(
       $this->words_to_array($_POST['list1']),
       $this->words_to_array($_POST['list2']),
-      array_key_exists('box1', $_POST) && $_POST['box1'] == 'on');
+      array_key_exists('box1', $_POST) && $_POST['box1'] == 'on',
+      $_POST['method']);
     $this->view = new View();
   }
 

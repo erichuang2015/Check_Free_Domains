@@ -32,8 +32,23 @@ if (isset($defis) && $defis)
 ?>
 >
 </p>
+<?php if (!isset($method)) $method = 'whois'; ?>
 
-<br>
+Способ проверки доменных имен:<br>
+<input name="method" type="radio" value="whois"
+<?php
+if ($method == 'whois')
+  echo ' checked';
+?>
+> Через WhoIs (медленно, но надежно)<br>
+<input name="method" type="radio" value="dns"
+<?php
+if ($method == 'dns')
+  echo ' checked';
+?>
+> Через DNS (быстрее, но ~ 5% результатов - ложные)<br>
+
+<br><br>
 
 <p><input type='submit' value='Проверить (займет время, ждите!)'></p>
   
@@ -43,7 +58,7 @@ if (isset($defis) && $defis)
 if (isset($freenames)) {
   echo '<br><p>Всего проверено доменных имен: ', $names_counter;
   $fnames_counter = count($freenames);
-  echo '<br>Из них доступны и не заняты: ', $fnames_counter;
+  echo '<br>Из них свободны: ', $fnames_counter;
   if ($fnames_counter > 0) {
     echo '<br><br>Найденные доменные имена:<br><br>';
     echo implode('<br>', $freenames);
