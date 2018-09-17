@@ -3,6 +3,7 @@
 Реализовано в духе MVC.
 
 Использует .htaccess.
+Требует php-curl.
 Требует включенного mod_rewrite. Для Apache2+ достаточно выполнить в терминале Linux
 команды sudo a2enmod rewrite && sudo service apache2 restart.
 

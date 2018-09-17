@@ -57,18 +57,76 @@ class Model_Check_Free_Domains extends Model {
   private function is_available_by_dns($name) {
     return gethostbyname($name) == $name;
   }
+  
+  private function availables_by_api($domains) {
+    $url = "https://api.godaddy.com/v1/domains/available?checkType=FAST";
+
+    /* ключ для ote-api.godaddy.com
+    $header = array(
+      'Authorization: sso-key 3mM44UYhpyYPJD_TVLsuJXadgBhEE7AkdqDVe:TVLv3QdTTQrqHNaJHN9txU',
+      'Content-Type: application/json'
+    );
+    */
+    
+    $header = array(
+      'Authorization: sso-key dLiaSJnBQRMs_HdBiKa7HLcYG9zRdgqLGX:HdDMGqtnTxkeocN3yeKi7',
+      'Content-Type: application/json'
+    );
+
+
+    //open connection
+    $ch = curl_init();
+    $timeout=60;
+
+    //set the url and other options for curl
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,false);  
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST'); // Values: GET, POST, PUT, DELETE, PATCH, UPDATE 
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($domains));
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+
+    //execute call and return response data.
+    $result = curl_exec($ch);
+
+    //close curl connection
+    curl_close($ch);
+
+    // decode the json response
+    $dr = json_decode($result, true);
+    
+    if (!$dr || !array_key_exists('domains', $dr))
+      die('Ошибка: проблемы с откликом API!');  // не для реальной работы
+    
+    $freenames = array();
+
+    foreach ($dr['domains'] as $domain)
+      if ($domain['available']) $freenames[] = $domain['domain'];
+    
+    sort($freenames);
+    
+    return $freenames;    
+  }
 
   public function get_data() {	
     $freenames = array();
-    foreach ($this->names as $name)
-      if ($this->{'is_available_by_'.$this->method}($name))
-        $freenames[] = $name;
+    $names_counter = count($this->names);
+    if ($this->method == 'api')
+      for ($i = 0; $i < $names_counter; $i+=500) // каждый запрос - до 500 доменов
+        $freenames = array_merge($freenames, $this->availables_by_api(array_slice($this->names, $i, 500)));
+    else
+      foreach ($this->names as $name)
+        if ($this->{'is_available_by_'.$this->method}($name))
+          $freenames[] = $name;
     return array(			
       'list1' => $this->list1,
       'list2' => $this->list2,
       'defis' => $this->defis,
       'method' => $this->method,
-      'names_counter' => count($this->names),
+      'names_counter' => $names_counter,
       'freenames' => $freenames);
   }
 
